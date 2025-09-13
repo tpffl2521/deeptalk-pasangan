@@ -3,23 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DeepTalk Pasangan — Kartu Flip + Daftar</title>
+  <title>DeepTalk Pasangan — Kartu Flip + Daftar (Colorful)</title>
   <style>
     :root{
-      /* 🌈 Tema lebih cerah */
-      --bg-grad: radial-gradient(1400px 900px at 10% 0%, #0ea5e9 0%, #0f172a 40%),
-                 radial-gradient(1200px 800px at 100% 10%, #22c55e55 0%, transparent 60%),
-                 radial-gradient(1000px 700px at 50% 100%, #8b5cf655 0%, transparent 60%);
-      --card-grad-front: linear-gradient(135deg,#0ea5e9,#22c55e);
-      --card-grad-back: linear-gradient(180deg,#1e293b,#0b1222);
-      --edge:#223049;
-      --text:#f8fafc;     /* sangat terang */
-      --muted:#cbd5e1;
-      --accent:#f59e0b;   /* amber */
-      --accent-2:#22c55e; /* green */
-      --accent-3:#0ea5e9; /* sky */
+      /* 🌈 Tema colorful & cerah */
+      --bg-grad:
+        radial-gradient(1200px 800px at 8% -10%, #fff0f6 0%, #fff 60%),
+        radial-gradient(1000px 700px at 110% 0%, #e0f7ff 0%, transparent 65%),
+        radial-gradient(900px 700px at 50% 100%, #ecffec 0%, transparent 65%);
+
+      /* Kartu: warna nge-pop tapi tetap lembut */
+      --card-grad-front: linear-gradient(135deg,#ff8fab 0%,#ffd166 45%,#7dd3fc 75%,#86efac 100%);
+      --card-grad-back: linear-gradient(180deg,#ffffff,#f8fafc);
+
+      /* Warna umum */
+      --edge:#e2e8f0;
+      --text:#0b1222;    /* gelap untuk kontras di background cerah */
+      --muted:#475569;   /* slate-600 */
+      --accent:#ef4444;  /* merah coral */
+      --accent-2:#22c55e;/* green */
+      --accent-3:#0ea5e9;/* sky */
       --radius:22px;
     }
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -29,21 +35,24 @@
       display:grid; place-items:center;
     }
     .wrap{ width:min(1100px, 100%); padding:24px; }
+
     header{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:16px}
     .brand{ display:flex; gap:10px; align-items:center; }
-    .logo{ width:38px; height:38px; border-radius:12px; background:conic-gradient(from 120deg,#0ea5e9,#22c55e,#f59e0b,#8b5cf6,#0ea5e9); box-shadow:0 10px 30px #38bdf84d inset; }
+    .logo{ width:38px; height:38px; border-radius:12px; background:conic-gradient(from 120deg,#ff8fab,#ffd166,#7dd3fc,#86efac,#ff8fab); box-shadow:0 10px 30px #fda4af55 inset; }
     h1{ font-size:20px; margin:0; letter-spacing:.3px }
+
     .controls{ display:flex; gap:8px; flex-wrap:wrap; }
     button, .ghost{
-      background:#0b1222aa; color:var(--text);
-      border:1px solid var(--edge); border-radius:14px; padding:10px 14px; font-weight:600; cursor:pointer;
-      transition:.2s ease; font-size:14px; line-height:1;
-      backdrop-filter: blur(4px);
+      background:#ffffffcc; color:var(--text);
+      border:1px solid var(--edge); border-radius:14px; padding:10px 14px; font-weight:700; cursor:pointer;
+      transition:.2s ease; font-size:14px; line-height:1; backdrop-filter: blur(6px);
+      box-shadow:0 6px 18px #00000012;
     }
-    button:hover{ transform:translateY(-1px); box-shadow:0 8px 20px #0006; border-color:#33537a }
-    button.primary{ background:linear-gradient(180deg,#1f2937,#0b1222); border-color:#2c3a4c }
-    button.accent{ background:linear-gradient(180deg,#1a2736,#0b1222); border-color:#1d3c4d; box-shadow:0 0 0 0 #38bdf822; }
-    button.accent:active{ box-shadow:0 0 0 6px #38bdf833; }
+    button:hover{ transform:translateY(-1px); box-shadow:0 10px 24px #00000018; border-color:#cbd5e1 }
+    button.primary{ background:linear-gradient(180deg,#ffffff,#f8fafc); border-color:#dbeafe }
+    button.accent{ background:linear-gradient(180deg,#fff7ed,#ffedd5); border-color:#fed7aa }
+    button.accent:active{ box-shadow:0 0 0 6px #fed7aa66; }
+    .ghost{ background:transparent }
 
     .stage{ display:grid; gap:18px; grid-template-columns: 1fr; }
 
@@ -60,43 +69,44 @@
       display:flex; align-items:center; justify-content:center; text-align:center;
       backface-visibility:hidden; -webkit-backface-visibility:hidden; overflow:hidden;
       border:1px solid var(--edge);
-      box-shadow: 0 40px 120px #0008, inset 0 1px 0 #ffffff22;
+      box-shadow: 0 30px 90px #00000014, inset 0 1px 0 #ffffffee;
     }
     .front{ background: var(--card-grad-front); }
     .back{ background: var(--card-grad-back); transform: rotateY(180deg); }
 
-    .front .label{ display:grid; gap:6px; align-items:center; justify-items:center; color:#0b1222; text-shadow:0 2px 12px #ffffff7a }
+    .front .label{ display:grid; gap:6px; align-items:center; justify-items:center; color:#0b1222; text-shadow:0 2px 12px #ffffffaa }
     .front .num{ font-weight:900; letter-spacing:.6px; font-size: clamp(18px, 2.4vw, 22px); text-transform:uppercase }
     .front .big{ font-size: clamp(42px, 6.6vw, 72px); font-weight:900; line-height:1; }
-    .front .hint{ font-size:12px; opacity:.9 }
+    .front .hint{ font-size:12px; opacity:.85 }
 
-    .q{ font-size: clamp(20px, 3.2vw, 32px); line-height:1.35; letter-spacing:.2px; }
+    .q{ font-size: clamp(20px, 3.2vw, 32px); line-height:1.35; letter-spacing:.2px; color:#0b1222 }
 
     .meta{ display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:12px; padding:0 4px; }
 
-    dialog{ border:none; width:min(700px, 96%); max-width:700px; padding:0; border-radius:18px; overflow:hidden; background:#0b1222; color:var(--text); box-shadow:0 30px 120px #000a; }
-    .dlg-head{ display:flex; justify-content:space-between; align-items:center; padding:16px 18px; background:#0f172a; border-bottom:1px solid var(--edge) }
-    .dlg-body{ padding:18px; display:grid; gap:12px }
-    .dlg-foot{ display:flex; gap:8px; justify-content:flex-end; padding:14px 18px; border-top:1px solid var(--edge) }
-    textarea{ width:100%; min-height:220px; resize:vertical; border-radius:12px; border:1px solid var(--edge); padding:12px; background:#0a1424; color:var(--text); font-size:14px; }
-    .hint{ color:var(--muted); font-size:12px }
-    .pill{ border:1px solid var(--edge); padding:6px 10px; border-radius:999px; }
-
     /* === Drawer daftar pertanyaan === */
-    .drawer{ position: fixed; top:0; right:0; height:100%; width:min(420px, 94%); background:#0b1222; color:var(--text); border-left:1px solid var(--edge); box-shadow:-20px 0 80px #0008; transform: translateX(100%); transition: transform .35s ease; z-index: 50; display:flex; flex-direction:column; }
+    .drawer{ position: fixed; top:0; right:0; height:100%; width:min(420px, 94%); background:#ffffffee; color:var(--text); border-left:1px solid var(--edge); box-shadow:-20px 0 80px #00000018; transform: translateX(100%); transition: transform .35s ease; z-index: 50; display:flex; flex-direction:column; backdrop-filter: blur(8px); }
     .drawer.open{ transform: translateX(0); }
-    .drawer-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--edge); background:#0f172a }
+    .drawer-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--edge); background:#f8fafc }
     .drawer-body{ overflow:auto; padding:10px; display:grid; gap:12px; }
     .drawer .tabs{ display:flex; gap:6px; padding:10px; border-bottom:1px solid var(--edge); }
-    .tab{ padding:8px 12px; border:1px solid var(--edge); border-radius:999px; background:#0b1222; cursor:pointer; font-weight:700; font-size:13px }
-    .tab.active{ background:linear-gradient(90deg, var(--accent-3), var(--accent-2)); color:#0b1222; border-color:transparent }
+    .tab{ padding:8px 12px; border:1px solid var(--edge); border-radius:999px; background:#ffffff; cursor:pointer; font-weight:800; font-size:13px }
+    .tab.active{ background:linear-gradient(90deg, var(--accent-3), var(--accent-2)); color:#ffffff; border-color:transparent }
 
-    .item{ display:grid; gap:2px; padding:10px 12px; border:1px solid #223049; border-radius:12px; background: #0b1222; cursor:pointer; transition:.15s }
-    .item:hover{ transform: translateY(-1px); border-color:#33537a }
-    .item .title{ font-weight:700; font-size:13px; color:#e2e8f0 }
-    .item .small{ font-size:12px; color:#94a3b8 }
+    .item{ display:grid; gap:2px; padding:10px 12px; border:1px solid #e2e8f0; border-radius:12px; background: #ffffff; cursor:pointer; transition:.15s; box-shadow:0 6px 16px #0000000a }
+    .item:hover{ transform: translateY(-1px); border-color:#cbd5e1; box-shadow:0 10px 20px #00000012 }
+    .item .title{ font-weight:800; font-size:13px; color:#0f172a }
+    .item .small{ font-size:12px; color:#64748b }
 
-    .drawer-foot{ margin-top:auto; padding:12px 16px; display:flex; gap:8px; border-top:1px solid var(--edge) }
+    .drawer-foot{ margin-top:auto; padding:12px 16px; display:flex; gap:8px; border-top:1px solid var(--edge); background:#f8fafc }
+    .pill{ border:1px solid var(--edge); padding:6px 10px; border-radius:999px; background:#ffffff; color:#1f2937 }
+
+    /* === Dialog Manage === */
+    dialog{ border:none; width:min(700px, 96%); max-width:700px; padding:0; border-radius:18px; overflow:hidden; background:#ffffff; color:var(--text); box-shadow:0 30px 120px #00000022; }
+    .dlg-head{ display:flex; justify-content:space-between; align-items:center; padding:16px 18px; background:#f8fafc; border-bottom:1px solid var(--edge) }
+    .dlg-body{ padding:18px; display:grid; gap:12px }
+    .dlg-foot{ display:flex; gap:8px; justify-content:flex-end; padding:14px 18px; border-top:1px solid var(--edge); background:#f8fafc }
+    textarea{ width:100%; min-height:220px; resize:vertical; border-radius:12px; border:1px solid var(--edge); padding:12px; background:#ffffff; color:var(--text); font-size:14px; box-shadow:inset 0 1px 0 #00000005 }
+    .hint{ color:var(--muted); font-size:12px }
 
     @media (max-width:720px){
       .wrap{ padding:16px }
@@ -112,7 +122,7 @@
         <div class="logo" aria-hidden="true"></div>
         <div>
           <h1>DeepTalk Pasangan</h1>
-          <div class="hint">Kartu flip berwarna • buka untuk lihat pertanyaan 💬</div>
+          <div class="hint">Kartu flip colorful • buka untuk lihat pertanyaan 💬</div>
         </div>
       </div>
       <div class="controls">
@@ -140,7 +150,7 @@
       </section>
       <div class="meta">
         <div><span class="pill" id="countBadge">0 pertanyaan</span></div>
-        <div class="hint">Tip: Ketuk/Swipe untuk membuka pertanyaan. Ketuk lagi untuk menutup. Gunakan **Daftar** untuk melihat riwayat & semua pertanyaan.</div>
+        <div class="hint">Tip: Ketuk/Swipe untuk membuka pertanyaan. Ketuk lagi untuk menutup. Gunakan <strong>Daftar</strong> untuk lihat riwayat & semua pertanyaan.</div>
       </div>
     </main>
   </div>
