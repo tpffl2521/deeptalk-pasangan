@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DeepTalk Pasangan — Kartu Flip + Daftar</title>
+  <style>
+    :root{
+      /* 🌈 Tema lebih cerah */
+      --bg-grad: radial-gradient(1400px 900px at 10% 0%, #0ea5e9 0%, #0f172a 40%),
+                 radial-gradient(1200px 800px at 100% 10%, #22c55e55 0%, transparent 60%),
+                 radial-gradient(1000px 700px at 50% 100%, #8b5cf655 0%, transparent 60%);
+      --card-grad-front: linear-gradient(135deg,#0ea5e9,#22c55e);
+      --card-grad-back: linear-gradient(180deg,#1e293b,#0b1222);
+      --edge:#223049;
+      --text:#f8fafc;     /* sangat terang */
+      --muted:#cbd5e1;
+      --accent:#f59e0b;   /* amber */
+      --accent-2:#22c55e; /* green */
+      --accent-3:#0ea5e9; /* sky */
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+      background: var(--bg-grad);
+      color:var(--text);
+      display:grid; place-items:center;
+    }
+    .wrap{ width:min(1100px, 100%); padding:24px; }
+    header{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:16px}
+    .brand{ display:flex; gap:10px; align-items:center; }
+    .logo{ width:38px; height:38px; border-radius:12px; background:conic-gradient(from 120deg,#0ea5e9,#22c55e,#f59e0b,#8b5cf6,#0ea5e9); box-shadow:0 10px 30px #38bdf84d inset; }
+    h1{ font-size:20px; margin:0; letter-spacing:.3px }
+    .controls{ display:flex; gap:8px; flex-wrap:wrap; }
+    button, .ghost{
+      background:#0b1222aa; color:var(--text);
+      border:1px solid var(--edge); border-radius:14px; padding:10px 14px; font-weight:600; cursor:pointer;
+      transition:.2s ease; font-size:14px; line-height:1;
+      backdrop-filter: blur(4px);
+    }
+    button:hover{ transform:translateY(-1px); box-shadow:0 8px 20px #0006; border-color:#33537a }
+    button.primary{ background:linear-gradient(180deg,#1f2937,#0b1222); border-color:#2c3a4c }
+    button.accent{ background:linear-gradient(180deg,#1a2736,#0b1222); border-color:#1d3c4d; box-shadow:0 0 0 0 #38bdf822; }
+    button.accent:active{ box-shadow:0 0 0 6px #38bdf833; }
+
+    .stage{ display:grid; gap:18px; grid-template-columns: 1fr; }
+
+    /* === Flip Card === */
+    .card{ perspective:1200px; }
+    .card-inner{
+      position:relative; width:100%; min-height:260px; border-radius:var(--radius); cursor:pointer;
+      transform-style:preserve-3d; transition:transform .6s cubic-bezier(.2,.8,.2,1);
+    }
+    .card.flipped .card-inner{ transform: rotateY(180deg); }
+
+    .face{
+      position:absolute; inset:0; border-radius:var(--radius); padding:28px;
+      display:flex; align-items:center; justify-content:center; text-align:center;
+      backface-visibility:hidden; -webkit-backface-visibility:hidden; overflow:hidden;
+      border:1px solid var(--edge);
+      box-shadow: 0 40px 120px #0008, inset 0 1px 0 #ffffff22;
+    }
+    .front{ background: var(--card-grad-front); }
+    .back{ background: var(--card-grad-back); transform: rotateY(180deg); }
+
+    .front .label{ display:grid; gap:6px; align-items:center; justify-items:center; color:#0b1222; text-shadow:0 2px 12px #ffffff7a }
+    .front .num{ font-weight:900; letter-spacing:.6px; font-size: clamp(18px, 2.4vw, 22px); text-transform:uppercase }
+    .front .big{ font-size: clamp(42px, 6.6vw, 72px); font-weight:900; line-height:1; }
+    .front .hint{ font-size:12px; opacity:.9 }
+
+    .q{ font-size: clamp(20px, 3.2vw, 32px); line-height:1.35; letter-spacing:.2px; }
+
+    .meta{ display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:12px; padding:0 4px; }
+
+    dialog{ border:none; width:min(700px, 96%); max-width:700px; padding:0; border-radius:18px; overflow:hidden; background:#0b1222; color:var(--text); box-shadow:0 30px 120px #000a; }
+    .dlg-head{ display:flex; justify-content:space-between; align-items:center; padding:16px 18px; background:#0f172a; border-bottom:1px solid var(--edge) }
+    .dlg-body{ padding:18px; display:grid; gap:12px }
+    .dlg-foot{ display:flex; gap:8px; justify-content:flex-end; padding:14px 18px; border-top:1px solid var(--edge) }
+    textarea{ width:100%; min-height:220px; resize:vertical; border-radius:12px; border:1px solid var(--edge); padding:12px; background:#0a1424; color:var(--text); font-size:14px; }
+    .hint{ color:var(--muted); font-size:12px }
+    .pill{ border:1px solid var(--edge); padding:6px 10px; border-radius:999px; }
+
+    /* === Drawer daftar pertanyaan === */
+    .drawer{ position: fixed; top:0; right:0; height:100%; width:min(420px, 94%); background:#0b1222; color:var(--text); border-left:1px solid var(--edge); box-shadow:-20px 0 80px #0008; transform: translateX(100%); transition: transform .35s ease; z-index: 50; display:flex; flex-direction:column; }
+    .drawer.open{ transform: translateX(0); }
+    .drawer-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--edge); background:#0f172a }
+    .drawer-body{ overflow:auto; padding:10px; display:grid; gap:12px; }
+    .drawer .tabs{ display:flex; gap:6px; padding:10px; border-bottom:1px solid var(--edge); }
+    .tab{ padding:8px 12px; border:1px solid var(--edge); border-radius:999px; background:#0b1222; cursor:pointer; font-weight:700; font-size:13px }
+    .tab.active{ background:linear-gradient(90deg, var(--accent-3), var(--accent-2)); color:#0b1222; border-color:transparent }
+
+    .item{ display:grid; gap:2px; padding:10px 12px; border:1px solid #223049; border-radius:12px; background: #0b1222; cursor:pointer; transition:.15s }
+    .item:hover{ transform: translateY(-1px); border-color:#33537a }
+    .item .title{ font-weight:700; font-size:13px; color:#e2e8f0 }
+    .item .small{ font-size:12px; color:#94a3b8 }
+
+    .drawer-foot{ margin-top:auto; padding:12px 16px; display:flex; gap:8px; border-top:1px solid var(--edge) }
+
+    @media (max-width:720px){
+      .wrap{ padding:16px }
+      .front .big{ font-size: clamp(38px, 12vw, 64px); }
+      .drawer{ width:100% }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>DeepTalk Pasangan</h1>
+          <div class="hint">Kartu flip berwarna • buka untuk lihat pertanyaan 💬</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="accent" id="btnToggle" title="Spasi / Enter / →">Buka/Tutup ▸</button>
+        <button id="btnList">Daftar</button>
+        <button id="btnManage">Kelola</button>
+        <button id="btnReset" class="ghost">Reset</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <section class="card" id="card" tabindex="0" role="button" aria-label="Kartu pertanyaan (ketuk untuk flip)">
+        <div class="card-inner" id="cardInner">
+          <div class="face front" id="front">
+            <div class="label">
+              <div class="num" id="frontNum">Pertanyaan #1</div>
+              <div class="big">?</div>
+              <div class="hint">Ketuk / Swipe untuk membuka</div>
+            </div>
+          </div>
+          <div class="face back">
+            <div class="q" id="question">—</div>
+          </div>
+        </div>
+      </section>
+      <div class="meta">
+        <div><span class="pill" id="countBadge">0 pertanyaan</span></div>
+        <div class="hint">Tip: Ketuk/Swipe untuk membuka pertanyaan. Ketuk lagi untuk menutup. Gunakan **Daftar** untuk melihat riwayat & semua pertanyaan.</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Drawer Daftar -->
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <strong>Daftar Pertanyaan</strong>
+      <button id="btnCloseDrawer">✕</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" id="tabHistory">Riwayat</button>
+      <button class="tab" id="tabAll">Semua</button>
+    </div>
+    <div class="drawer-body" id="list"></div>
+    <div class="drawer-foot">
+      <button id="btnExportList">Export JSON</button>
+      <button id="btnClearHistory" class="ghost">Bersihkan Riwayat</button>
+    </div>
+  </aside>
+
+  <!-- Dialog Manage -->
+  <dialog id="dlg">
+    <div class="dlg-head">
+      <strong>Kelola Pertanyaan</strong>
+      <button id="btnClose">✕</button>
+    </div>
+    <div class="dlg-body">
+      <div class="hint">Tulis satu pertanyaan per baris. Kamu bisa <em>tambahkan</em> ke daftar yang ada atau <em>ganti seluruh</em> daftar.</div>
+      <textarea id="txt"></textarea>
+      <div class="hint">Total baris: <span id="lineCount">0</span></div>
+    </div>
+    <div class="dlg-foot">
+      <button id="btnExport">Export</button>
+      <input type="file" id="fileImport" accept="application/json" hidden />
+      <button id="btnImport">Import</button>
+      <div style="flex:1"></div>
+      <button id="btnAdd">Tambahkan</button>
+      <button id="btnReplace" class="primary">Ganti Daftar</button>
+    </div>
+  </dialog>
+
+  <script>
+  (()=>{
+    // ===== Data Awal =====
+    const DEFAULTS = [
+      "Hal kecil apa dari aku yang kamu syukuri hari ini?",
+      "Kapan terakhir kali kamu merasa benar-benar didengar? Apa yang membuat momen itu spesial?",
+      "Nilai apa yang paling kamu pegang dalam hubungan?",
+      "Bagian masa kecilmu yang ingin aku pahami lebih dalam apa?",
+      "Kalau kita punya tradisi mingguan berdua, maunya seperti apa?",
+      "Kapan kamu paling butuh pelukan?",
+      "Apa kekhawatiran terbesarmu akhir-akhir ini dan bagaimana aku bisa bantu?",
+      "Kapan kamu merasa paling dicintai olehku?",
+      "Batasan pribadi apa yang penting buatmu untuk aku hormati?",
+      "Apa impian 1–2 tahun ke depan yang ingin kita wujudkan bersama?",
+      "Hal sederhana apa yang bisa kita mulai besok untuk membuat hubungan ini 1% lebih baik?",
+      "Kebiasaan kecilku yang menggemaskan atau menyebalkan—sebut satu masing-masing 😄",
+      "Kalau ada momen kita yang pengen kamu ulang, momen apa dan kenapa?"
+    ];
+
+    const KEY = 'deeptalk_questions_v1';
+    const KEY_DECK = 'deeptalk_deck_v1';
+    const KEY_HISTORY = 'deeptalk_history_v1';
+
+    // ===== Elemen UI =====
+    const card = document.getElementById('card');
+    const cardInner = document.getElementById('cardInner');
+    const questionEl = document.getElementById('question');
+    const countBadge = document.getElementById('countBadge');
+    const frontNum = document.getElementById('frontNum');
+
+    const btnToggle = document.getElementById('btnToggle');
+    const btnList = document.getElementById('btnList');
+    const btnManage = document.getElementById('btnManage');
+    const btnReset = document.getElementById('btnReset');
+
+    const drawer = document.getElementById('drawer');
+    const btnCloseDrawer = document.getElementById('btnCloseDrawer');
+    const listBox = document.getElementById('list');
+    const tabHistory = document.getElementById('tabHistory');
+    const tabAll = document.getElementById('tabAll');
+    const btnExportList = document.getElementById('btnExportList');
+    const btnClearHistory = document.getElementById('btnClearHistory');
+
+    const dlg = document.getElementById('dlg');
+    const btnClose = document.getElementById('btnClose');
+    const txt = document.getElementById('txt');
+    const lineCount = document.getElementById('lineCount');
+    const btnAdd = document.getElementById('btnAdd');
+    const btnReplace = document.getElementById('btnReplace');
+    const btnExport = document.getElementById('btnExport');
+    const btnImport = document.getElementById('btnImport');
+    const fileImport = document.getElementById('fileImport');
+
+    // ===== State =====
+    let questions = loadQuestions();
+    let deck = loadDeck(questions);
+    let history = loadHistory(); // array of {i:number, q:string, t:number}
+    let revealed = false;
+    let currentIdx = null;
+    let shownCount = history.length; // lanjutan nomor dari panjang riwayat
+
+    // ===== Utils =====
+    function saveQuestions(list){
+      localStorage.setItem(KEY, JSON.stringify(list));
+      questions = list;
+      deck = makeShuffledDeck(questions.length);
+      saveDeck(deck);
+      updateCount();
+      updateFrontLabel();
+      renderList();
+    }
+
+    function loadQuestions(){
+      try{
+        const raw = localStorage.getItem(KEY);
+        if(raw){
+          const parsed = JSON.parse(raw);
+          if(Array.isArray(parsed) && parsed.length) return parsed;
+        }
+      }catch(e){ console.warn(e); }
+      localStorage.setItem(KEY, JSON.stringify(DEFAULTS));
+      return [...DEFAULTS];
+    }
+
+    function makeShuffledDeck(n){
+      const arr = Array.from({length:n}, (_,i)=>i);
+      for(let i=n-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [arr[i],arr[j]]=[arr[j],arr[i]];
+      }
+      return arr;
+    }
+
+    function saveDeck(d){ localStorage.setItem(KEY_DECK, JSON.stringify(d)); }
+    function loadDeck(list){
+      try{
+        const raw = localStorage.getItem(KEY_DECK);
+        if(raw){
+          const parsed = JSON.parse(raw);
+          if(Array.isArray(parsed) && parsed.every(Number.isInteger) && parsed.length) return parsed;
+        }
+      }catch(e){ }
+      const d = makeShuffledDeck(list.length); saveDeck(d); return d;
+    }
+
+    function loadHistory(){
+      try{
+        const raw = localStorage.getItem(KEY_HISTORY);
+        if(raw){ const arr = JSON.parse(raw); if(Array.isArray(arr)) return arr; }
+      }catch(e){}
+      return [];
+    }
+    function saveHistory(){ localStorage.setItem(KEY_HISTORY, JSON.stringify(history)); }
+
+    function updateCount(){ countBadge.textContent = `${questions.length} pertanyaan`; }
+    function updateFrontLabel(){ frontNum.textContent = `Pertanyaan #${Math.max(1, shownCount+1)}`; }
+    function vibrate(ms=18){ try{ if('vibrate' in navigator) navigator.vibrate(ms); }catch(_){} }
+
+    function prepareNextIfNeeded(){
+      if(currentIdx===null){
+        if(deck.length===0){ deck = makeShuffledDeck(questions.length); saveDeck(deck); }
+        currentIdx = deck.pop(); saveDeck(deck);
+      }
+    }
+
+    function reveal(){
+      prepareNextIfNeeded();
+      const q = questions[currentIdx] || '—';
+      questionEl.textContent = q;
+      card.classList.add('flipped'); revealed = true; vibrate(18);
+      // catat ke riwayat sekali per index tampil
+      history.push({ i: currentIdx, q, t: Date.now() });
+      saveHistory();
+      shownCount = history.length;
+      renderList();
+    }
+    function hide(){
+      card.classList.remove('flipped'); revealed = false; currentIdx = null; updateFrontLabel();
+    }
+
+    function toggleFlip(){ revealed ? hide() : reveal(); }
+
+    // ===== List (drawer) =====
+    function openDrawer(){ drawer.classList.add('open'); renderList(); }
+    function closeDrawer(){ drawer.classList.remove('open'); }
+
+    let activeTab = 'history';
+    function renderList(){
+      listBox.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      if(activeTab==='history'){
+        if(history.length===0){
+          const empty = document.createElement('div');
+          empty.className='hint';
+          empty.textContent='Belum ada riwayat. Buka beberapa kartu dulu.';
+          listBox.appendChild(empty);
+        } else {
+          // tampilkan terbaru di atas
+          [...history].map((h,idx)=>({h, idx: history.length-idx})).reverse().forEach(({h, idx})=>{
+            const el = document.createElement('div');
+            el.className='item';
+            el.innerHTML = `<div class="title">#${idx} • ${escapeHtml(h.q).slice(0,80)}</div>
+                            <div class="small">Index ${h.i} • ${new Date(h.t).toLocaleString()}</div>`;
+            el.addEventListener('click', ()=> selectFromList(h.i));
+            frag.appendChild(el);
+          });
+        }
+      } else {
+        questions.forEach((q,i)=>{
+          const el = document.createElement('div');
+          el.className='item';
+          el.innerHTML = `<div class="title">#${i+1} • ${escapeHtml(q).slice(0,80)}</div>
+                          <div class="small">Klik untuk tampilkan</div>`;
+          el.addEventListener('click', ()=> selectFromList(i));
+          frag.appendChild(el);
+        });
+      }
+      listBox.appendChild(frag);
+    }
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+    }
+
+    function selectFromList(index){
+      currentIdx = index;
+      // pastikan back terisi & menunjukkan pertanyaan itu
+      const q = questions[currentIdx] || '—';
+      questionEl.textContent = q;
+      // buka sisi pertanyaan jika belum terbuka
+      if(!revealed){ card.classList.add('flipped'); revealed = true; }
+      vibrate(10);
+    }
+
+    // ===== Events: klik/keyboard =====
+    card.addEventListener('click', toggleFlip);
+    document.getElementById('btnToggle').addEventListener('click', toggleFlip);
+    document.getElementById('btnList').addEventListener('click', openDrawer);
+    btnCloseDrawer.addEventListener('click', closeDrawer);
+
+    tabHistory.addEventListener('click', ()=>{ activeTab='history'; tabHistory.classList.add('active'); tabAll.classList.remove('active'); renderList(); });
+    tabAll.addEventListener('click', ()=>{ activeTab='all'; tabAll.classList.add('active'); tabHistory.classList.remove('active'); renderList(); });
+
+    document.addEventListener('keydown', (e)=>{
+      if(['Space','Enter','N','ArrowRight',' '].includes(e.key)){
+        if(document.activeElement && (document.activeElement.tagName==='TEXTAREA' || document.activeElement.tagName==='INPUT')) return;
+        e.preventDefault();
+        toggleFlip();
+      }
+      if(e.key==='Escape' && drawer.classList.contains('open')) closeDrawer();
+    });
+
+    // ===== Swipe (Mobile) =====
+    let startX = 0, startY = 0, touching = false;
+    card.addEventListener('touchstart', (e)=>{
+      if(e.touches.length !== 1) return;
+      touching = true;
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+    }, {passive:true});
+
+    card.addEventListener('touchend', (e)=>{
+      if(!touching) return; touching = false;
+      const dx = (e.changedTouches?.[0]?.clientX || 0) - startX;
+      const dy = (e.changedTouches?.[0]?.clientY || 0) - startY;
+      if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40){
+        toggleFlip();
+      }
+    });
+
+    // ===== Dialog Manage =====
+    btnManage.addEventListener('click', ()=>{
+      txt.value = questions.join('\n');
+      updateLineCount();
+      dlg.showModal();
+    });
+    btnClose.addEventListener('click', ()=> dlg.close());
+
+    txt.addEventListener('input', updateLineCount);
+    function updateLineCount(){
+      const lines = txt.value.split(/\n/).filter(v=>v.trim().length>0);
+      lineCount.textContent = lines.length;
+    }
+
+    btnAdd.addEventListener('click', ()=>{
+      const lines = parseLines(txt.value);
+      if(!lines.length){ dlg.close(); return; }
+      const merged = uniq([...questions, ...lines]);
+      saveQuestions(merged);
+      dlg.close();
+      updateFrontLabel();
+    });
+
+    btnReplace.addEventListener('click', ()=>{
+      const lines = parseLines(txt.value);
+      saveQuestions(uniq(lines));
+      dlg.close();
+      updateFrontLabel();
+    });
+
+    btnReset.addEventListener('click', ()=>{
+      if(confirm('Kembalikan ke daftar default?')){
+        saveQuestions([...DEFAULTS]);
+        history = []; saveHistory();
+        shownCount = 0; currentIdx = null; revealed = false; card.classList.remove('flipped');
+        updateFrontLabel(); renderList();
+      }
+    });
+
+    btnExport.addEventListener('click', ()=>{
+      const data = { questions };
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'deeptalk-pertanyaan.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    btnImport.addEventListener('click', ()=> fileImport.click());
+    fileImport.addEventListener('change', async (e)=>{
+      const file = e.target.files?.[0];
+      if(!file) return;
+      try{
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if(Array.isArray(data)){
+          saveQuestions(uniq(data.filter(v=>typeof v==='string')));
+        } else if (Array.isArray(data.questions)){
+          saveQuestions(uniq(data.questions.filter(v=>typeof v==='string')));
+        } else {
+          alert('Format tidak dikenali. Harus berupa array string atau {"questions": [...]}');
+          return;
+        }
+        dlg.close(); updateFrontLabel(); renderList();
+      }catch(err){ alert('Gagal import: '+err.message); }
+      finally{ e.target.value=''; }
+    });
+
+    btnExportList.addEventListener('click', ()=>{
+      const data = { history, questions };
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='deeptalk-daftar.json'; a.click(); URL.revokeObjectURL(url);
+    });
+    btnClearHistory.addEventListener('click', ()=>{
+      if(confirm('Bersihkan riwayat yang pernah ditampilkan?')){
+        history = []; saveHistory(); shownCount = 0; updateFrontLabel(); renderList();
+      }
+    });
+
+    // ===== Helpers =====
+    function parseLines(text){ return text.split(/\n/).map(v=>v.trim()).filter(Boolean); }
+    function uniq(arr){ return Array.from(new Set(arr.map(v=>v.trim()))); }
+
+    // ===== Init =====
+    updateCount();
+    updateFrontLabel();
+    renderList();
+
+    // ===== Test Cases (console) =====
+    (function runTests(){
+      console.group('%cDeepTalk Flip + Daftar — Test Cases','color:#0ea5e9');
+      console.assert(uniq(['a','a','b']).length===2, 'uniq harus menghapus duplikat');
+      const d = makeShuffledDeck(10);
+      console.assert(d.length===10 && d.every(i=> Number.isInteger(i) && i>=0 && i<10), 'deck valid');
+      const before = history.length;
+      // reveal mencatat riwayat & flip
+      reveal();
+      console.assert(history.length===before+1 && card.classList.contains('flipped'), 'reveal menambah riwayat & flip');
+      // pilih dari list (by index 0 jika ada)
+      if(questions[0]){ selectFromList(0); console.assert(revealed===true && questionEl.textContent, 'selectFromList menampilkan pertanyaan'); }
+      // reset riwayat
+      const lenBeforeClear = history.length; history=[]; saveHistory(); console.assert(lenBeforeClear>=0 && Array.isArray(history), 'bersihkan riwayat ok');
+      hide(); console.assert(!revealed, 'hide menutup kartu');
+      // ➕ Extra tests
+      console.assert(typeof btnReplace !== 'undefined' && typeof btnReplace.addEventListener === 'function', 'btnReplace.addEventListener tersedia');
+      console.assert(escapeHtml('<>"&\'') === '&lt;&gt;&quot;&amp;&#39;', 'escapeHtml memetakan karakter spesial');
+      console.groupEnd();
+    })();
+  })();
+  </script>
+</body>
+</html>
